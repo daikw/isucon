@@ -1,0 +1,33 @@
+isucon@ip-172-31-33-100:~$ tail -n 1 bench/*
+==> bench/1 <==
+{"pass":true,"score":0,"success":280,"fail":62,"messages":["リクエストがタイムアウトしました (GET /)","リクエストがタイムアウトしました (GET /@chasity)","リクエストがタイムアウトしました (GET /@chelsea)","リクエストがタイムアウトしました (GET /@dena)","リクエストがタイムアウトしました (GET /@dominique)","リクエストがタイムアウトしました (GET /@jennie)","リクエストがタイムアウトしました (GET /@joann)","リクエストがタイムアウトしました (GET /@nadia)","リクエストがタイムアウトしました (GET /@rowena)","リクエストがタイムアウトしました (POST /login)","リクエストがタイムアウトしました (POST /register)"]}
+
+==> bench/2.nginx-conf <==
+{"pass":true,"score":0,"success":284,"fail":62,"messages":["リクエストがタイムアウトしました (GET /)","リクエストがタイムアウトしました (GET /@alfreda)","リクエストがタイムアウトしました (GET /@aline)","リクエストがタイムアウトしました (GET /@aurelia)","リクエストがタイムアウトしました (GET /@leola)","リクエストがタイムアウトしました (GET /@louella)","リクエストがタイムアウトしました (GET /@margret)","リクエストがタイムアウトしました (GET /@suzette)","リクエストがタイムアウトしました (GET /@tami)","リクエストがタイムアウトしました (POST /login)","リクエストがタイムアウトしました (POST /register)"]}
+
+==> bench/3.add-index-on-comments <==
+{"pass":true,"score":19751,"success":18617,"fail":0,"messages":[]}
+
+==> bench/4.interpolate <==
+{"pass":true,"score":22522,"success":21186,"fail":0,"messages":[]}
+
+==> bench/5.n+1.users <==
+{"pass":true,"score":26461,"success":25147,"fail":0,"messages":[]}
+
+==> bench/6 <==
+{"pass":true,"score":23913,"success":22617,"fail":0,"messages":[]}
+
+==> bench/6.not-force-index <==
+{"pass":true,"score":25785,"success":24536,"fail":0,"messages":[]}
+
+==> bench/7 <==
+{"pass":true,"score":26575,"success":25250,"fail":0,"messages":[]}
+
+==> bench/7.nginx-with-static-files <==
+{"pass":true,"score":26359,"success":25053,"fail":0,"messages":[]}
+
+==> bench/8.imgdata-saved-as-files <==
+{"pass":true,"score":37258,"success":35955,"fail":0,"messages":[]}
+
+==> bench/8.imgdata-saved-as-files.2 <==
+{"pass":true,"score":36843,"success":35547,"fail":0,"messages":[]}
