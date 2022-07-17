@@ -180,29 +180,33 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 			return nil, err
 		}
 
-		query := "SELECT * FROM `comments` WHERE `post_id` = ? ORDER BY `created_at` DESC"
-		if !allComments {
-			query += " LIMIT 3"
+		query := "select " +
+			"c.id as `id`, " +
+			"c.post_id as `post_id`, " +
+			"c.user_id as `user_id`, " +
+			"c.comment as `comment`, " +
+			"c.created_at as `created_at`, " +
+			"u.id as `user.id`, " +
+			"u.account_name as `user.account_name`, " +
+			"u.passhash as `user.passhash`, " +
+			"u.authority as `user.authority`, " +
+			"u.del_flg as `user.del_flg`, " +
+			"u.created_at as `user.created_at` " +
+			"from `comments` as c " +
+			"join `users` as u " +
+			"on c.user_id = u.id " +
+			"where c.post_id = ? " +
+			"order by c.created_at"
+		if allComments {
+			query += " asc"
+		} else {
+			query += " desc LIMIT 3"
 		}
-		var comments []Comment
-		err = db.Select(&comments, query, p.ID)
+
+		err = db.Select(&p.Comments, query, p.ID)
 		if err != nil {
 			return nil, err
 		}
-
-		for i := 0; i < len(comments); i++ {
-			err := db.Get(&comments[i].User, "SELECT * FROM `users` WHERE `id` = ?", comments[i].UserID)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// reverse
-		for i, j := 0, len(comments)-1; i < j; i, j = i+1, j-1 {
-			comments[i], comments[j] = comments[j], comments[i]
-		}
-
-		p.Comments = comments
 
 		err = db.Get(&p.User, "SELECT * FROM `users` WHERE `id` = ?", p.UserID)
 		if err != nil {
