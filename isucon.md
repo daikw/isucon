@@ -25,8 +25,7 @@ sudo add-apt-repository -y ppa:chris-lea/redis-server ; sudo apt install -y redi
 
 - ab
 - pt-query-digest
-- alp
-- 
+- alp 
 
 ------------------------------------------------------------------------------------------------------------------
 

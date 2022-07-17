@@ -33,6 +33,8 @@ const (
 	postsPerPage  = 20
 	ISO8601Format = "2006-01-02T15:04:05-07:00"
 	UploadLimit   = 10 * 1024 * 1024 // 10mb
+
+	PublicBasePath = "/home/isucon/private_isu/webapp/public"
 )
 
 type User struct {
@@ -171,10 +173,33 @@ func getFlash(w http.ResponseWriter, r *http.Request, key string) string {
 	}
 }
 
+func checkImageExist(filepath string) bool {
+    _, err := os.Stat(PublicBasePath + filepath)
+    return err == nil
+}
+
+func saveImage(filepath string, imgdata []byte) error {
+	f, err := os.OpenFile(PublicBasePath + filepath, os.O_WRONLY|os.O_CREATE, 0664)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.Write(imgdata)
+	return err	
+}
+
 func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, error) {
 	var posts []Post
 
 	for _, p := range results {
+		if filepath := imageURL(p); !checkImageExist(filepath) {
+			err := saveImage(filepath, p.Imgdata)
+			if err != nil {
+				return nil, err
+			}	
+		}
+
 		err := db.Get(&p.CommentCount, "SELECT COUNT(*) AS `count` FROM `comments` WHERE `post_id` = ?", p.ID)
 		if err != nil {
 			return nil, err
@@ -608,6 +633,7 @@ func postIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	file, header, err := r.FormFile("file")
+	defer file.Close()
 	if err != nil {
 		session := getSession(r)
 		session.Values["notice"] = "画像が必須です"
@@ -618,15 +644,19 @@ func postIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mime := ""
+	ext := ""
 	if file != nil {
 		// 投稿のContent-Typeからファイルのタイプを決定する
 		contentType := header.Header["Content-Type"][0]
 		if strings.Contains(contentType, "jpeg") {
 			mime = "image/jpeg"
+			ext = ".jpg"
 		} else if strings.Contains(contentType, "png") {
 			mime = "image/png"
+			ext = ".png"
 		} else if strings.Contains(contentType, "gif") {
 			mime = "image/gif"
+			ext = ".gif"
 		} else {
 			session := getSession(r)
 			session.Values["notice"] = "投稿できる画像形式はjpgとpngとgifだけです"
@@ -657,7 +687,7 @@ func postIndex(w http.ResponseWriter, r *http.Request) {
 		query,
 		me.ID,
 		mime,
-		filedata,
+		[]byte{},
 		r.FormValue("body"),
 	)
 	if err != nil {
@@ -666,6 +696,13 @@ func postIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pid, err := result.LastInsertId()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	filepath := "/image/" + strconv.FormatInt(pid, 10) + ext
+	err = saveImage(filepath, filedata)
 	if err != nil {
 		log.Print(err)
 		return
