@@ -233,11 +233,6 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 			return nil, err
 		}
 
-		err = db.Get(&p.User, "SELECT * FROM `users` WHERE `id` = ?", p.UserID)
-		if err != nil {
-			return nil, err
-		}
-
 		p.CSRFToken = csrfToken
 
 		if p.User.DelFlg == 0 {
@@ -469,7 +464,15 @@ func getAccountName(w http.ResponseWriter, r *http.Request) {
 
 	results := []Post{}
 
-	err = db.Select(&results, "SELECT `id`, `user_id`, `body`, `mime`, `created_at` FROM `posts` WHERE `user_id` = ? ORDER BY `created_at` DESC", user.ID)
+	// query := "SELECT `id`, `user_id`, `body`, `mime`, `created_at` FROM `posts` WHERE `user_id` = ? ORDER BY `created_at` DESC"
+	query := "select " +
+		"p.id, p.user_id, p.body, p.created_at, p.mime, u.account_name " +
+		"from `posts` as p join `users` as u " +
+		"on p.user_id = u.id " +
+		"where u.del_flg = 0 && p.user_id = ?" +
+		"order by p.created_at desc limit 20"
+
+	err = db.Select(&results, query, user.ID)
 	if err != nil {
 		log.Print(err)
 		return
