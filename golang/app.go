@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	crand "crypto/rand"
+	"encoding/gob"
 	"fmt"
 	"html/template"
 	"io"
@@ -25,14 +27,16 @@ import (
 )
 
 var (
-	db    *sqlx.DB
-	store *gsm.MemcacheStore
+	db           *sqlx.DB
+	queryStore   *memcache.Client
+	sessionStore *gsm.MemcacheStore
 )
 
 const (
-	postsPerPage  = 20
-	ISO8601Format = "2006-01-02T15:04:05-07:00"
-	UploadLimit   = 10 * 1024 * 1024 // 10mb
+	postsPerPage       = 20
+	ISO8601Format      = "2006-01-02T15:04:05-07:00"
+	UploadLimit        = 10 * 1024 * 1024 // 10mb
+	MemCacheExpiration = 10               // second
 
 	PublicBasePath = "/home/isucon/private_isu/webapp/public"
 )
@@ -69,12 +73,20 @@ type Comment struct {
 }
 
 func init() {
-	memdAddr := os.Getenv("ISUCONP_MEMCACHED_ADDRESS")
-	if memdAddr == "" {
-		memdAddr = "localhost:11211"
+	// memcache
+	{
+		memdAddr := os.Getenv("ISUCONP_MEMCACHED_ADDRESS")
+		if memdAddr == "" {
+			memdAddr = "localhost:11211"
+		}
+		memcacheClient := memcache.New(memdAddr)
+
+		queryStore = memcacheClient
+
+		sessionStore = gsm.NewMemcacheStore(memcacheClient, "iscogram_", []byte("sendagaya"))
+		sessionStore.StoreMethod = gsm.StoreMethodGob
 	}
-	memcacheClient := memcache.New(memdAddr)
-	store = gsm.NewMemcacheStore(memcacheClient, "iscogram_", []byte("sendagaya"))
+
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
@@ -137,8 +149,33 @@ func calculatePasshash(accountName, password string) string {
 	return digest(password + ":" + calculateSalt(accountName))
 }
 
+func encode(item interface{}) []byte {
+	buf := bytes.NewBuffer(nil)
+	_ = gob.NewEncoder(buf).Encode(item)
+	return buf.Bytes()
+}
+
+func decode(dest interface{}, data []byte) error {
+	buf := bytes.NewBuffer(data)
+	return gob.NewDecoder(buf).Decode(dest)
+}
+
+func setQueryResult(key string, item interface{}) error {
+	encoded := encode(item)
+	return queryStore.Set(&memcache.Item{Key: key, Value: encoded, Expiration: MemCacheExpiration})
+}
+
+func getQueryResult(dest interface{}, key string) error {
+	item, err := queryStore.Get(key)
+	if err != nil {
+		return err
+	}
+
+	return decode(&dest, item.Value)
+}
+
 func getSession(r *http.Request) *sessions.Session {
-	session, _ := store.Get(r, "isuconp-go.session")
+	session, _ := sessionStore.Get(r, "isuconp-go.session")
 
 	return session
 }
@@ -200,37 +237,57 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 			}
 		}
 
-		err := db.Get(&p.CommentCount, "SELECT COUNT(*) AS `count` FROM `comments` WHERE `post_id` = ?", p.ID)
-		if err != nil {
-			return nil, err
+		{
+			cacheKey := fmt.Sprintf("comments.%v.count", p.ID)
+			if err := getQueryResult(&p.CommentCount, cacheKey); err == memcache.ErrCacheMiss {
+				err := db.Get(&p.CommentCount, "SELECT COUNT(*) AS `count` FROM `comments` WHERE `post_id` = ?", p.ID)
+				if err != nil {
+					return nil, err
+				}
+				err = setQueryResult(cacheKey, p.CommentCount)
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 
-		query := "select " +
-			"c.id as `id`, " +
-			"c.post_id as `post_id`, " +
-			"c.user_id as `user_id`, " +
-			"c.comment as `comment`, " +
-			"c.created_at as `created_at`, " +
-			"u.id as `user.id`, " +
-			"u.account_name as `user.account_name`, " +
-			"u.passhash as `user.passhash`, " +
-			"u.authority as `user.authority`, " +
-			"u.del_flg as `user.del_flg`, " +
-			"u.created_at as `user.created_at` " +
-			"from `comments` as c " +
-			"join `users` as u " +
-			"on c.user_id = u.id " +
-			"where c.post_id = ? " +
-			"order by c.created_at"
-		if allComments {
-			query += " asc"
-		} else {
-			query += " desc LIMIT 3"
-		}
+		{
+			query := "select " +
+				"c.id as `id`, " +
+				"c.post_id as `post_id`, " +
+				"c.user_id as `user_id`, " +
+				"c.comment as `comment`, " +
+				"c.created_at as `created_at`, " +
+				"u.id as `user.id`, " +
+				"u.account_name as `user.account_name`, " +
+				"u.passhash as `user.passhash`, " +
+				"u.authority as `user.authority`, " +
+				"u.del_flg as `user.del_flg`, " +
+				"u.created_at as `user.created_at` " +
+				"from `comments` as c " +
+				"join `users` as u " +
+				"on c.user_id = u.id " +
+				"where c.post_id = ? " +
+				"order by c.created_at"
+			var cacheKey string
+			if allComments {
+				query += " asc"
+				cacheKey = fmt.Sprintf("comments.%v.true", p.ID)
+			} else {
+				query += " desc LIMIT 3"
+				cacheKey = fmt.Sprintf("comments.%v.false", p.ID)
+			}
 
-		err = db.Select(&p.Comments, query, p.ID)
-		if err != nil {
-			return nil, err
+			if err := getQueryResult(&p.CommentCount, cacheKey); err == memcache.ErrCacheMiss {
+				err := db.Select(&p.Comments, query, p.ID)
+				if err != nil {
+					return nil, err
+				}
+				err = setQueryResult(cacheKey, p.Comments)
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 
 		p.CSRFToken = csrfToken
