@@ -1,33 +1,57 @@
-isucon@ip-172-31-33-100:~$ tail -n 1 bench/*
-==> bench/1 <==
+❯ tail -n 1 bench/*
+==> bench/01 <==
 {"pass":true,"score":0,"success":280,"fail":62,"messages":["リクエストがタイムアウトしました (GET /)","リクエストがタイムアウトしました (GET /@chasity)","リクエストがタイムアウトしました (GET /@chelsea)","リクエストがタイムアウトしました (GET /@dena)","リクエストがタイムアウトしました (GET /@dominique)","リクエストがタイムアウトしました (GET /@jennie)","リクエストがタイムアウトしました (GET /@joann)","リクエストがタイムアウトしました (GET /@nadia)","リクエストがタイムアウトしました (GET /@rowena)","リクエストがタイムアウトしました (POST /login)","リクエストがタイムアウトしました (POST /register)"]}
 
-==> bench/2.nginx-conf <==
+==> bench/02.nginx-conf <==
 {"pass":true,"score":0,"success":284,"fail":62,"messages":["リクエストがタイムアウトしました (GET /)","リクエストがタイムアウトしました (GET /@alfreda)","リクエストがタイムアウトしました (GET /@aline)","リクエストがタイムアウトしました (GET /@aurelia)","リクエストがタイムアウトしました (GET /@leola)","リクエストがタイムアウトしました (GET /@louella)","リクエストがタイムアウトしました (GET /@margret)","リクエストがタイムアウトしました (GET /@suzette)","リクエストがタイムアウトしました (GET /@tami)","リクエストがタイムアウトしました (POST /login)","リクエストがタイムアウトしました (POST /register)"]}
 
-==> bench/3.add-index-on-comments <==
+==> bench/03.add-index-on-comments <==
 {"pass":true,"score":19751,"success":18617,"fail":0,"messages":[]}
 
-==> bench/4.interpolate <==
+==> bench/04.interpolate <==
 {"pass":true,"score":22522,"success":21186,"fail":0,"messages":[]}
 
-==> bench/5.n+1.users <==
+==> bench/05.n+1.users <==
 {"pass":true,"score":26461,"success":25147,"fail":0,"messages":[]}
 
-==> bench/6 <==
+==> bench/06 <==
 {"pass":true,"score":23913,"success":22617,"fail":0,"messages":[]}
 
-==> bench/6.not-force-index <==
+==> bench/06.not-force-index <==
 {"pass":true,"score":25785,"success":24536,"fail":0,"messages":[]}
 
-==> bench/7 <==
+==> bench/07 <==
 {"pass":true,"score":26575,"success":25250,"fail":0,"messages":[]}
 
-==> bench/7.nginx-with-static-files <==
+==> bench/07.nginx-with-static-files <==
 {"pass":true,"score":26359,"success":25053,"fail":0,"messages":[]}
 
-==> bench/8.imgdata-saved-as-files <==
+==> bench/08.imgdata-saved-as-files <==
 {"pass":true,"score":37258,"success":35955,"fail":0,"messages":[]}
 
-==> bench/8.imgdata-saved-as-files.2 <==
+==> bench/08.imgdata-saved-as-files.2 <==
 {"pass":true,"score":36843,"success":35547,"fail":0,"messages":[]}
+
+==> bench/09 <==
+{"pass":true,"score":36611,"success":35330,"fail":0,"messages":[]}
+
+==> bench/09.n+1.posts <==
+{"pass":true,"score":68797,"success":66117,"fail":0,"messages":[]}
+
+==> bench/09.n+1.posts.2 <==
+{"pass":true,"score":94725,"success":91643,"fail":0,"messages":[]}
+
+==> bench/09.n+1.posts.3 <==
+{"pass":true,"score":95598,"success":92485,"fail":0,"messages":[]}
+
+==> bench/10 <==
+{"pass":true,"score":100680,"success":97440,"fail":0,"messages":[]}
+
+==> bench/10.index-on-posts.user_id <==
+{"pass":true,"score":132691,"success":129363,"fail":0,"messages":[]}
+
+==> bench/11 <==
+{"pass":true,"score":133899,"success":130422,"fail":0,"messages":[]}
+
+==> bench/11.query-cache-on-memcached <==
+{"pass":true,"score":163373,"success":158627,"fail":0,"messages":[]}
