@@ -11,7 +11,11 @@ systemctl restart mysql
 rm /var/log/mysql/mysql-slow.log
 mysqladmin flush-logs
 
+systemctl restart isu-go
+
+echo "Application restart done, run your benchmarker ..."
+
 sleep 5
 sudo query-digester
 
-ls /tmp/slow_query_*.digest /home/isucon/digests/$1
+ls /tmp/slow_query_*.digest | xargs -IXXX sudo mv XXX /home/isucon/digests/$1
