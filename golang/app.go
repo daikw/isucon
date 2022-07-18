@@ -174,19 +174,19 @@ func getFlash(w http.ResponseWriter, r *http.Request, key string) string {
 }
 
 func checkImageExist(filepath string) bool {
-    _, err := os.Stat(PublicBasePath + filepath)
-    return err == nil
+	_, err := os.Stat(PublicBasePath + filepath)
+	return err == nil
 }
 
 func saveImage(filepath string, imgdata []byte) error {
-	f, err := os.OpenFile(PublicBasePath + filepath, os.O_WRONLY|os.O_CREATE, 0664)
+	f, err := os.OpenFile(PublicBasePath+filepath, os.O_WRONLY|os.O_CREATE, 0664)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
 	_, err = f.Write(imgdata)
-	return err	
+	return err
 }
 
 func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, error) {
@@ -197,7 +197,7 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 			err := saveImage(filepath, p.Imgdata)
 			if err != nil {
 				return nil, err
-			}	
+			}
 		}
 
 		err := db.Get(&p.CommentCount, "SELECT COUNT(*) AS `count` FROM `comments` WHERE `post_id` = ?", p.ID)
