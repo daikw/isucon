@@ -413,7 +413,8 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 	// query := "SELECT `id`, `user_id`, `body`, `mime`, `created_at` FROM `posts` ORDER BY `created_at` DESC"
 	query := "select " +
 		"p.id, p.user_id, p.body, p.created_at, p.mime " +
-		"from `posts` as p join `users` as u " +
+		"from `posts` as p use index (idx_created_at) " +
+		"join `users` as u " +
 		"on p.user_id = u.id " +
 		"where u.del_flg = 0 " +
 		"order by p.created_at desc limit 20"
@@ -467,7 +468,8 @@ func getAccountName(w http.ResponseWriter, r *http.Request) {
 	// query := "SELECT `id`, `user_id`, `body`, `mime`, `created_at` FROM `posts` WHERE `user_id` = ? ORDER BY `created_at` DESC"
 	query := "select " +
 		"p.id, p.user_id, p.body, p.created_at, p.mime, u.account_name " +
-		"from `posts` as p join `users` as u " +
+		"from `posts` as p use index (idx_created_at) " +
+		"join `users` as u " +
 		"on p.user_id = u.id " +
 		"where u.del_flg = 0 && p.user_id = ?" +
 		"order by p.created_at desc limit 20"
@@ -563,7 +565,8 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	// query := "SELECT `id`, `user_id`, `body`, `mime`, `created_at` FROM `posts` WHERE `created_at` <= ? ORDER BY `created_at` DESC"
 	query := "select " +
 		"p.id, p.user_id, p.body, p.created_at, p.mime " +
-		"from `posts` as p join `users` as u " +
+		"from `posts` as p use index (idx_created_at) " +
+		"join `users` as u " +
 		"on p.user_id = u.id " +
 		"where u.del_flg = 0 && p.created_at <= ?" +
 		"order by p.created_at desc limit 20"
