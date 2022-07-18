@@ -12,7 +12,7 @@ nginx -s reopen
 
 # mysql
 systemctl restart mysql
-rm /var/log/mysql/mysql-slow.log
+# rm /var/log/mysql/mysql-slow.log # already rotated by query-digester
 mysqladmin flush-logs
 
 # redis
