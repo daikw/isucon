@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	crand "crypto/rand"
+	"crypto/sha512"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"html/template"
 	"io"
@@ -11,7 +13,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path"
 	"regexp"
 	"strconv"
@@ -127,18 +128,23 @@ func validateUser(accountName, password string) bool {
 // 取り急ぎPHPのescapeshellarg関数を参考に自前で実装
 // cf: http://jp2.php.net/manual/ja/function.escapeshellarg.php
 func escapeshellarg(arg string) string {
-	return "'" + strings.Replace(arg, "'", "'\\''", -1) + "'"
+	// return "'" + strings.Replace(arg, "'", "'\\''", -1) + "'"
+	return strings.Replace(arg, "'", "'\\''", -1)
 }
 
+// origin: `/bin/bash -c 'printf "%s" aaa | openssl dgst -sha512 | sed "s/^.*= //"'`
 func digest(src string) string {
-	// opensslのバージョンによっては (stdin)= というのがつくので取る
-	out, err := exec.Command("/bin/bash", "-c", `printf "%s" `+escapeshellarg(src)+` | openssl dgst -sha512 | sed 's/^.*= //'`).Output()
-	if err != nil {
-		log.Print(err)
-		return ""
-	}
+	// // opensslのバージョンによっては (stdin)= というのがつくので取る
+	// out, err := exec.Command("/bin/bash", "-c", `printf "%s" `+escapeshellarg(src)+` | openssl dgst -sha512 | sed 's/^.*= //'`).Output()
+	// if err != nil {
+	// 	log.Print(err)
+	// 	return ""
+	// }
 
-	return strings.TrimSuffix(string(out), "\n")
+	// return strings.TrimSuffix(string(out), "\n")
+
+	checksum := sha512.Sum512([]byte(escapeshellarg(src)))
+	return hex.EncodeToString(checksum[:])
 }
 
 func calculateSalt(accountName string) string {
